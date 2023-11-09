@@ -1,6 +1,10 @@
 import os
+import random
 
-from flask import Flask
+from flaskr import module
+from werkzeug.exceptions import abort
+
+from flask import Flask, render_template, request
 
 
 def create_app(test_config=None):
@@ -25,8 +29,25 @@ def create_app(test_config=None):
         pass
 
     # a simple page that says hello
+    @app.route('/test')
+    def index():
+        return render_template('index.html')
+    
+    @app.route('/home')
     @app.route('/')
-    def hello():
-        return 'Hello, World!'
+    def home():
+        books =module.getListRandomBook()
+        return render_template('home.html', books =books)
+    
+    @app.route('/<int:book_id>', methods=['GET', 'POST'])
+    def detail(book_id):
+        book = module.getBookbyId(book_id)
+
+        # if request.method == 'POST':
+        #     rating = request.form.get('rating')
+        #     print(rating)
+            # comment = request.form.get('comment')
+
+        return render_template('detail.html', book=book)
 
     return app

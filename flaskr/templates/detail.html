@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- <h1>{% block title %} Hello, World! {% endblock %}</h1> -->
+
+
+<div class="container text-center">
+    <div class="row">
+        <div class="col-sm-4">
+            <div class="row">
+                <img src="{{book['img']}}" class="rounded" alt="{{book['title']}}">
+
+            </div>
+
+            <div class="containe row">
+                <h2>Đánh giá</h2>
+                <form action="" method="post">
+                    <div class="form-group">
+                        <label for="rating">Đánh giá:</label>
+                        <div id="rating" name="rating"></div>
+                    </div>
+
+                    <!-- <div class="form-group">
+                        <label for="rating">Điểm đánh giá:</label>
+
+                        <input id="rating" name="rating" class="rating" data-min="0" data-max="5" step="0.1"
+                            data-size="lg">
+                    </div> -->
+
+                    <!-- <div class="form-group">
+                        <label for="comment">Nhận xét:</label>
+                        <textarea class="form-control" id="comment" name="comment" rows="4"></textarea>
+                    </div> -->
+                    <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
+                </form>
+            </div>
+
+        </div>
+
+        <div class="col-sm-8 text-start">
+            <h3>{{book['title']}}</h3>
+            
+            <p>{{book['authors']}}</p>
+            <div id="ratingavg" style="display: inline-block;"></div>
+            <div style="display: inline-block;"> <strong>{{ book['ratingavg'] }}</strong></div>
+
+            <p>{{book['description']}}</p>
+        </div>
+    </div>
+</div>
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+<script src="{{ url_for('static', filename='js/jquery.raty.js') }}"></script>
+
+<script>
+    // console.log({{ book['ratingavg'] }});
+    $(document).ready(function () {
+        $(function () {
+            $('#rating').raty({
+                path: "{{ url_for('static', filename='images') }}",
+                number: 5, // Số lượng ngôi sao
+                score: 2, // Điểm khởi đầu
+            });
+
+            $('#ratingavg').raty({
+                path: "{{ url_for('static', filename='images') }}",
+                readOnly: true,
+                number: 5, // Số lượng ngôi sao
+                score: {{ book['ratingavg'] }}, // Điểm khởi đầu
+            });
+        });
+    });
+</script>
+{% endblock %}

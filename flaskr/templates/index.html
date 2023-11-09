@@ -1,0 +1,19 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Recommend System</title>
+</head>
+<body>
+    Hello, World!
+</body>
+</html> -->
+
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>{% block title %} Hello, World! {% endblock %}</h1>
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/index.css') }}">
+{% endblock %}
