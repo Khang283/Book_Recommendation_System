@@ -35,24 +35,29 @@ def create_app(test_config=None):
     def index():
         return render_template('index.html')
     
+    # page home
     @app.route('/home')
     @app.route('/')
     def home():
-
         user = session.get('user')
-        books =module.getListRandomBook()
-        return render_template('home.html', books =books, user=user)
+        list_books = module.getList("./data/books.csv")
+        books_random =module.getListRandomBook(list_books)
+        return render_template('home.html', books =books_random, user=user)
     
+    # page detail
     @app.route('/<int:book_id>', methods=['GET', 'POST'])
     def detail(book_id):
-        # books = module.getList('./data/metadata.json')
-        # ratings =module.getList('./data/ratings.json')
+        list_books = module.getList('./data/books.csv')
+        ratings =module.getList('./data/ratings.csv')
         # module.test()
-        book = module.getBookbyId(book_id)
+        book = module.getBookbyId(book_id, list_books, ratings)
+
+        books_random =module.getListRandomBook(list_books)
+
         if 'user' in session:
             user = session.get('user')
-            rating_user = module.getRatingBookByUser(book_id, user['user_id'])
-            return render_template('detail.html', book=book, user=user, rating_user= rating_user)
+            rating_user = module.getRatingBookByUser(book_id, user['user_id'], ratings)
+            return render_template('detail.html', book=book, user=user, rating_user= rating_user, books = books_random)
         
         # if request.method == 'POST':
         #     module.test()
@@ -70,23 +75,27 @@ def create_app(test_config=None):
         #     return redirect(url_for('detail', book_id))
             # return render_template('detail.html', book=book, user=user, rating_user= rating)
 
-        return render_template('detail.html', book=book)
+        return render_template('detail.html', book=book, books = books_random)
     
     @app.route('/submit_rating', methods=['POST'])
     def submit_rating():
         if request.method == 'POST':
             rating_input = request.form['rating-input']
             book_id = request.form['book_id']
+            # ratings =module.getList('./data/ratings.csv')
             rating = {
                 "item_id": int(book_id),
                 "user_id": session.get('user')['user_id'],
                 "rating": int(rating_input)
             }
 
-            module.add_Rating(rating)
-            # print(rating)
-            return redirect(url_for('detail', book_id = book_id))
+            if module.add_Rating(rating):
+                return redirect(url_for('detail', book_id = book_id))
+            else:
+                error = 'Đánh giá không thành công'
+                return render_template('detail.html', error=error)
     
+    # page register
     @app.route('/register', methods=['GET', 'POST'])
     def register():
         
@@ -95,10 +104,10 @@ def create_app(test_config=None):
             password = request.form['password']
             hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
 
-            users = module.getList('./data/users.json')
+            users = module.getList('./data/users.csv')
             user_id = module.get_max_user_id(users) +1
 
-            if username not in users:
+            if username not in users["username"].tolist():
                 user = {
                     "user_id": user_id,
                     "username": username,
@@ -117,20 +126,26 @@ def create_app(test_config=None):
 
         return render_template('register.html')
     
+    # page login
     @app.route('/login', methods=['GET', 'POST'])
     def login():
         
         if request.method == 'POST':
             username = request.form['username']
             password = request.form['password']
-            users = module.getList('./data/users.json')
-            user = [i for i in users if username == i['username']]
+            users = module.getList('./data/users.csv')
+            user = users[users["username"] == username]
+            # user = [i for i in users if username == i['username']]
             if len(user) ==0:
                 error = 'Đăng nhập không hợp lệ. Làm ơn kiểm tra tên người dùng của bạn.'
                 return render_template('login.html', error=error)
             else:
-                if check_password_hash(user[0]['password'], password):
-                    session['user'] = user[0] 
+                if check_password_hash(user['password'].tolist()[0], password):
+                    user_sesion = {
+                        "username": username,
+                        "user_id": user['user_id'].tolist()[0]
+                    }
+                    session['user'] = user_sesion
                     return redirect(url_for('home'))
                 else:
                     error = 'Đăng nhập không hợp lệ. Làm ơn kiểm tra mật khẩu của bạn.'
