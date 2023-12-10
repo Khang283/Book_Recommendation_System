@@ -4,7 +4,7 @@ from pathlib import Path
 
 class KnowledgeBased :
     def __init__(self,path):
-        self.books = pd.read_json(path+"/metadata.json",lines=True)
+        self.books = pd.read_csv(path+"/books.csv", encoding="utf-8",usecols=range(1,10))
         self.tags = pd.read_json(path+'/tags.json',lines=True)
         self.tag_count = pd.read_json(path+'/tag_count.json',lines=True)
         self.ratings = pd.read_json(path+'/ratings.json',lines=True)
@@ -37,9 +37,13 @@ class KnowledgeBased :
         result = result.groupby('item_id').agg(tags=('tags','unique')).reset_index()
         read_books = self.ratings[self.ratings['user_id']==userId]['item_id']
         result = result[~result['item_id'].isin(read_books)]
-        result['average_rating'] = result['item_id'].apply(lambda x: self.calculate_score(x))
+        #result['average_rating'] = result['item_id'].apply(lambda x: self.calculate_score(x))
         result = pd.merge(self.books,result,on='item_id',how='inner')
         result = result.sort_values('average_rating',ascending=False)
         return result[:top]
+    
 
 
+path = Path(__file__).parent.parent/"data"
+recommneder = KnowledgeBased(str(path))
+print(recommneder.getRecommendBooks(2))
