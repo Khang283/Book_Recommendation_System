@@ -8,11 +8,7 @@ Activate venv
 ```
     .venv/Scripts/activate
 ```
-Cài flask
-```
-    pip install flask
-```
-hoặc 
+Cài các requirements
 ``` 
     pip install -r requirements.txt
 ```
