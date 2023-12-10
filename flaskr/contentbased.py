@@ -5,7 +5,6 @@ import re
 from nltk.tokenize import word_tokenize
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
-import numpy as npclea
 from gensim.models.keyedvectors import KeyedVectors
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
@@ -20,6 +19,20 @@ def joinPath(file_name):
 
 books = pd.read_json(joinPath("metadata.json"), lines=True)
 ratings = pd.read_json(joinPath("ratings.json"), lines=True)
+
+# Lọc theo user_id có ít nhất n lần rating
+n = 300
+user_counts = ratings["user_id"].value_counts()
+valid_users = user_counts[user_counts >= n].index
+filtered_ratings_by_user = ratings[ratings["user_id"].isin(valid_users)]
+
+# Lọc theo item_id có ít nhất m lần rating
+m = 10
+item_counts = ratings["item_id"].value_counts()
+valid_items = item_counts[item_counts >= m].index
+filtered_ratings = filtered_ratings_by_user[
+    filtered_ratings_by_user["item_id"].isin(valid_items)
+]
 
 
 def read_file_to_list(file_path):
@@ -66,7 +79,30 @@ def data_preprocessing(description):
     return ""
 
 
-books["preprocessed_description"] = books["description"].apply(data_preprocessing)
+books["preprocessed_description"] = books.apply(
+    lambda row: " ".join(
+        [
+            str(row["title"]),
+            str(row["authors"]),
+            str(row["year"]),
+            str(row["description"]),
+        ]
+    ),
+    axis=1,
+)
+books["preprocessed_description"] = books["preprocessed_description"].apply(
+    data_preprocessing
+)
+
+
+def getTestAndTrain(userId, ratings, books):
+    user_ratings = ratings[ratings["user_id"] == userId]
+    if not user_ratings.empty:
+        test_books = books[books["item_id"].isin(user_ratings["item_id"])]
+        train_books = books[~books["item_id"].isin(user_ratings["item_id"])]
+        return (test_books, train_books)
+    return (None, None)
+
 
 vectorizer = TfidfVectorizer()
 
@@ -75,9 +111,9 @@ tfidf_matrix = vectorizer.fit_transform(books["preprocessed_description"])
 cosine_sim = linear_kernel(tfidf_matrix, tfidf_matrix)
 
 
-def get_movie(index):
-    if index < len(books):
-        return books.loc[index]
+def get_movie(id):
+    if len(books[books["item_id"] == id]) != 0:
+        return books[books["item_id"] == id]["title"].values[0]
     else:
         return "Không tìm thấy bộ phim"
 
@@ -98,68 +134,9 @@ def recommended_k_films_by_movie_name(movie_name):
         df = df.drop(index=index)
         top_k_indices = df["cosine"].nlargest(k)
         recommended_films_list = [
-            {
-                key: value
-                for key, value in get_movie(index).to_dict().items()
-                if key != "preprocessed_description"
-            }
-            for index in top_k_indices.index
+            books.loc[index].to_dict() for index in top_k_indices.index
         ]
     return recommended_films_list
-
-
-class DocSim:
-    def __init__(self, w2v_model):
-        self.w2v_model = w2v_model
-
-    def vectorize(self, doc: str, max_length: int = None) -> np.ndarray:
-        words = [w for w in doc.split(" ")]
-        word_vecs = []
-
-        for word in words:
-            try:
-                vec = self.w2v_model[word]
-                word_vecs.append(vec)
-            except KeyError:
-                pass
-
-        if not word_vecs:
-            return np.zeros(self.w2v_model.vector_size)
-
-        vector = np.mean(word_vecs, axis=0)
-
-        return vector
-
-    def _cosine_sim(self, vecA, vecB):
-        csim = np.dot(vecA, vecB) / (np.linalg.norm(vecA) * np.linalg.norm(vecB))
-        if np.isnan(np.sum(csim)):
-            return 0
-        return csim
-
-    def calculate_similarity(self, source_doc, target_docs=None, threshold=0):
-        if not target_docs:
-            return []
-
-        if isinstance(target_docs, str):
-            target_docs = [target_docs]
-
-        max_length_source = max(
-            len(self.vectorize(word)) for word in source_doc.split(" ")
-        )
-        max_length_target = max(
-            len(self.vectorize(word)) for doc in target_docs for word in doc.split(" ")
-        )
-        max_length = max(max_length_source, max_length_target)
-
-        source_vec = self.vectorize(source_doc, max_length)
-        results = []
-        for doc in target_docs:
-            target_vec = self.vectorize(doc, max_length)
-            sim_score = self._cosine_sim(source_vec, target_vec)
-            if sim_score > threshold:
-                results.append({"score": sim_score, "doc": doc})
-
-        return results
 
 
 googlenews_model_path = "GoogleNews-vectors-negative300.bin.gz"
@@ -167,63 +144,74 @@ googlenews_model_path = "GoogleNews-vectors-negative300.bin.gz"
 model = KeyedVectors.load_word2vec_format(joinPath(googlenews_model_path), binary=True)
 
 
-import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+def vectorize(doc: str, w2v_model) -> np.ndarray:
+    words = [w for w in doc.split(" ")]
+    word_vecs = []
+
+    for word in words:
+        try:
+            vec = w2v_model[word]
+            word_vecs.append(vec)
+        except KeyError:
+            pass
+
+    if not word_vecs:
+        return np.zeros(w2v_model.vector_size)
+
+    vector = np.mean(word_vecs, axis=0)
+
+    return vector
 
 
-def getTestAndTrain(userId, ratings, books):
-    user_ratings = ratings[ratings["user_id"] == userId]
-    if not user_ratings.empty:
-        test_books = books[books["item_id"].isin(user_ratings["item_id"])]
-        train_books = books[~books["item_id"].isin(user_ratings["item_id"])]
-        return (test_books, train_books)
-    return None
+def _cosine_sim(vecA, vecB):
+    # Calculate the dot product of vecA and vecB
+    dot_product = np.dot(vecA, vecB)
+
+    # Calculate the magnitudes of vecA and vecB
+    magnitude_A = np.linalg.norm(vecA)
+    magnitude_B = np.linalg.norm(vecB)
+
+    # Calculate the cosine similarity
+    if magnitude_A != 0 and magnitude_B != 0:
+        cosine_similarity = dot_product / (magnitude_A * magnitude_B)
+    else:
+        cosine_similarity = 0  # Default value if one of the vectors has zero magnitude
+
+    return cosine_similarity
 
 
-def calculate_cosine_similarity_books(test_books, train_books):
-    ds = DocSim(model)
+def calculate_cosine_similarity_books_w2v(test_books, train_books, model=model):
+    test = "".join(test_books["preprocessed_description"].values)
+    train = train_books["preprocessed_description"].values
 
-    test_description = test_books["preprocessed_description"].values[0]
+    test_vec = vectorize(test, model)
 
-    train_descriptions = train_books["preprocessed_description"].tolist()
+    train_vecs = [vectorize(data, model) for data in train]
 
-    sim_scores = ds.calculate_similarity(test_description, train_descriptions)
+    sim_scores = [_cosine_sim(test_vec, vec) for vec in train_vecs]
 
-    result = list(zip(train_books["item_id"], [score["score"] for score in sim_scores]))
-
-    return result
+    return sim_scores
 
 
-def find_top_k_similar_books(userId, k, ratings, books):
-    data = getTestAndTrain(userId, ratings, books)
+def find_top_k_similar_books_w2v(userId, k, ratings=filtered_ratings):
+    test_books, train_books = getTestAndTrain(userId, ratings, books)
 
-    if data is not None:
-        cosine_similarities = calculate_cosine_similarity_books(data[0], data[1])
-
-        sorted_similarities = sorted(
-            cosine_similarities, key=lambda x: x[1], reverse=True
+    if test_books is not None:
+        cosine_similarities = calculate_cosine_similarity_books_w2v(
+            test_books, train_books
         )
 
-        top_k_cosine_similarities = sorted_similarities[:k]
-        print(top_k_cosine_similarities)
-        top_k_similar_id_books = [value[0] for value in top_k_cosine_similarities]
+        cos_df = train_books.copy()
 
-        top_k_similar_books = books[books["item_id"].isin(top_k_similar_id_books)]
+        cos_df["cos_sim"] = cosine_similarities
+
+        top_k_similar_books = cos_df.sort_values(by="cos_sim", ascending=False).head(k)
 
         return top_k_similar_books
     return None
 
 
-def recommended_k_films_user_id(userId, ratings, books):
-    k = 5
-
-    top_k_similar_books = find_top_k_similar_books(userId, k, ratings, books)
-
+def w2v_recommendation(userId, k, ratings=filtered_ratings):
+    top_k_similar_books = find_top_k_similar_books_w2v(userId, k, ratings)
     if top_k_similar_books is not None:
-        top_k_similar_books = top_k_similar_books.drop(
-            columns=["preprocessed_description"]
-        )
-        recommended_films_list = top_k_similar_books.to_dict(orient="records")
-        return recommended_films_list
-    return []
+        return top_k_similar_books.drop("cos_sim", axis=1).to_dict(orient="records")

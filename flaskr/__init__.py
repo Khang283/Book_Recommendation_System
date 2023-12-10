@@ -1,8 +1,8 @@
 import os
 
 from flask import Flask
-from flaskr import contentbased
-from flaskr import content_based
+from flaskr import contentbased as CB
+from flaskr import demographicfiltering as DF
 
 
 def create_app(test_config=None):
@@ -32,17 +32,22 @@ def create_app(test_config=None):
         return "Hello, World!"
 
     @app.route("/test")
-    def contentbasedRS():
-        userId = 100
-        contentbased_rs_list = contentbased.contentbasedRecommendationSystem(userId)
+    def contentbased_for_user():
+        userId = 28
+        contentbased_rs_list = CB.w2v_recommendation(userId, 10)
         if contentbased_rs_list is not None:
             return contentbased_rs_list
-        return "khong tim thay"
+        return []
 
     @app.route("/test2")
-    def contentbasedRS2():
+    def contentbased_on_book():
         movie_name = "The Hunger Games (The Hunger Games, #1)"
-        top_k = contentbased.recommended_k_films_by_movie_name(movie_name)
+        top_k = CB.recommended_k_films_by_movie_name(movie_name)
+        return top_k
+
+    @app.route("/test3")
+    def demographicfiltering():
+        top_k = DF.recommended(10)
         return top_k
 
     return app
