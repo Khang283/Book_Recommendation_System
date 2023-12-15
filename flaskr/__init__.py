@@ -6,6 +6,8 @@ from werkzeug.exceptions import abort
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from flask import Flask, render_template, request, redirect, url_for, session
+from flaskr import contentbased as CB
+from flaskr import demographicfiltering as DF
 
 
 def create_app(test_config=None):
@@ -13,13 +15,13 @@ def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
     app.secret_key = 'your_secret_key'
     app.config.from_mapping(
-        SECRET_KEY='dev',
-        DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
+        SECRET_KEY="dev",
+        DATABASE=os.path.join(app.instance_path, "flaskr.sqlite"),
     )
 
     if test_config is None:
         # load the instance config, if it exists, when not testing
-        app.config.from_pyfile('config.py', silent=True)
+        app.config.from_pyfile("config.py", silent=True)
     else:
         # load the test config if passed in
         app.config.from_mapping(test_config)
@@ -160,4 +162,31 @@ def create_app(test_config=None):
         session.pop('user', None)
         return redirect(url_for('login'))
 
+
+    @app.route("/test")
+    def contentbased_for_user():
+        userId = 28
+        contentbased_rs_list = CB.w2v_recommendation(userId, 10)
+        if contentbased_rs_list is not None:
+            return contentbased_rs_list
+        return []
+
+    @app.route("/test2")
+    def contentbased_on_book():
+        movie_name = "The Hunger Games (The Hunger Games, #1)"
+        top_k = CB.recommended_k_films_by_movie_name(movie_name)
+        return top_k
+
+    @app.route("/test3")
+    def demographicfiltering():
+        top_k = DF.recommended(10)
+        return top_k
+
     return app
+
+
+app = create_app()
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
