@@ -8,8 +8,10 @@ def joinPath(file_name):
     return file_path
 
 
-books = pd.read_json(joinPath("metadata.json"), lines=True)
-ratings = pd.read_json(joinPath("ratings.json"), lines=True)
+# books = pd.read_json(joinPath("metadata.json"), lines=True)
+# ratings = pd.read_json(joinPath("ratings.json"), lines=True)
+books = pd.read_json("./data/rawdata/metadata.json", lines=True)
+ratings = pd.read_json("./data/rawdata/ratings.json", lines=True)
 
 grouped_ratings = ratings.groupby("item_id")
 

@@ -9,16 +9,19 @@ from gensim.models.keyedvectors import KeyedVectors
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
-
+import nltk
+nltk.download('punkt')
 
 def joinPath(file_name):
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(base_dir, "data", file_name)
+    file_path = os.path.join(base_dir, "", file_name)
     return file_path
 
+books = pd.read_json("./data/rawdata/metadata.json", lines=True)
+ratings = pd.read_json("./data/rawdata/ratings.json", lines=True)
 
-books = pd.read_json(joinPath("metadata.json"), lines=True)
-ratings = pd.read_json(joinPath("ratings.json"), lines=True)
+# books = pd.read_json(joinPath("..\data\rawdata\metadata.json"), lines=True)
+# ratings = pd.read_json(joinPath("data\rawdata\ratings.json"), lines=True)
 
 # Lọc theo user_id có ít nhất n lần rating
 n = 300
@@ -46,8 +49,8 @@ def read_file_to_list(file_path):
         return []
 
 
-stopwords_list = read_file_to_list(joinPath("stopwords.txt"))
-
+# stopwords_list = read_file_to_list(joinPath("stopwords.txt"))
+stopwords_list = read_file_to_list("./model/stopwords.txt")
 
 def remove_punctuation(text):
     if isinstance(text, str):
@@ -139,9 +142,9 @@ def recommended_k_films_by_movie_name(movie_name):
     return recommended_films_list
 
 
-googlenews_model_path = "GoogleNews-vectors-negative300.bin.gz"
+googlenews_model_path = "./model/GoogleNews-vectors-negative300.bin.gz"
 
-model = KeyedVectors.load_word2vec_format(joinPath(googlenews_model_path), binary=True)
+model = KeyedVectors.load_word2vec_format(googlenews_model_path, binary=True)
 
 
 def vectorize(doc: str, w2v_model) -> np.ndarray:
