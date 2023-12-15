@@ -2,6 +2,13 @@ import json
 import random
 import pandas as pd
 from werkzeug.exceptions import abort
+from flaskr import CFService
+from pathlib import Path
+# from CFService import CFService
+
+pathKNN = Path('./data/knn_prediction.csv')
+pathALS = Path('./data/als_prediction.csv')
+service = CFService.CFService(pathKNN, pathALS)
 
 def getList(url):
     # data=[]
@@ -59,6 +66,35 @@ def test():
     print('test')
 # book
 
+def list_KNNRecommendation(user_id, books):
+    ratings =getList('./data/ratings.csv')
+    list_bookid = service.getKNNRecommendation(user_id)
+    list_books = []
+    for i in list_bookid:
+        book = books[books["item_id"] == i]
+        book_json = book.to_dict(orient='records')
+        list_books.append(book_json[0])
+
+    for book in list_books:
+         book['ratingavg'] = getRatingavg(book['item_id'], ratings)
+    return list_books
+
+def list_ALSRecommendation(user_id, books):
+    ratings =getList('./data/ratings.csv')
+    list_bookid = service.getALSRecommendation(user_id)
+    list_books = []
+    for i in list_bookid:
+        book = books[books["item_id"] == i]
+        book_json = book.to_dict(orient='records')
+        list_books.append(book_json[0])
+
+    for book in list_books:
+         book['ratingavg'] = getRatingavg(book['item_id'], ratings)
+
+    print(list_books)
+    return list_books
+
+
 def getBookbyId(book_id, books, ratings):
     book = books[books["item_id"] == book_id]
     book = book.to_dict(orient='records')
@@ -77,6 +113,8 @@ def getListRandomBook(books):
     return listBooks_json
 
 # user
+
+
 
 # Hàm này trả về giá trị lớn nhất của user_id trong dữ liệu
 def get_max_user_id(users):

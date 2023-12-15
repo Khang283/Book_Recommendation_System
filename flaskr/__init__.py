@@ -42,7 +42,9 @@ def create_app(test_config=None):
         user = session.get('user')
         list_books = module.getList("./data/books.csv")
         books_random =module.getListRandomBook(list_books)
-        return render_template('home.html', books =books_random, user=user)
+        books_ALS =module.list_ALSRecommendation(user["user_id"], list_books)
+        
+        return render_template('home.html', books =books_random, books_ALS = books_ALS,  user=user)
     
     # page detail
     @app.route('/<int:book_id>', methods=['GET', 'POST'])

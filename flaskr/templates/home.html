@@ -26,6 +26,32 @@
         {% endfor %}
     </div>
 
+    <br/>
+
+    {% if books_ALS !=[] %}
+    <h2>
+        Sách Khuyến Nghị
+    </h2>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-5 g-4" style="display: flex; flex-wrap: wrap; height: 100%;">
+        {% for book in books_ALS %}
+        <div class="col" >
+            <div class="card" style="height: 100%;">
+                <a href="{{ url_for('detail', book_id=book['item_id']) }}">
+                    <img src="{{book['img']}}" class="card-img-top" alt="{{book['title']}}" height="300px" width="200px">
+                </a>
+                <div class="card-body">
+                    <h5 class="card-title">{{book['title']}}</h5>
+                    <p class="card-text"> Tác giả: {{book['authors']}}</p>
+                    <!-- <p class="card-text" id="rating_{{book['item_id']}}" data-score="{{book['ratingavg']}}"></p> -->
+                    <div class="card-text ratingavg" id="ratingavg" data-score="{{book['ratingavg']}}"></div>
+                </div>
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
