@@ -55,31 +55,15 @@ def create_app(test_config=None):
         ratings =module.getList('./data/ratings.csv')
         # module.test()
         book = module.getBookbyId(book_id, list_books, ratings)
-
+        books_CB = module.list_CBRecommendation(book["title"], list_books, ratings)
         books_random =module.getListRandomBook(list_books)
 
         if 'user' in session:
             user = session.get('user')
             rating_user = module.getRatingBookByUser(book_id, user['user_id'], ratings)
-            return render_template('detail.html', book=book, user=user, rating_user= rating_user, books = books_random)
-        
-        # if request.method == 'POST':
-        #     module.test()
-        #     rating_input = request.form['rating-input']
-        #     module.test()
-        #     rating = {
-        #         "item_id": book_id,
-        #         "user_id": session.get('user')['user_id'],
-        #         "rating": rating_input
-        #     }
-        #     module.test()
+            return render_template('detail.html', book=book, user=user, rating_user= rating_user, books = books_CB)
 
-        #     module.add_Rating(rating)
-        #     # print(rating)
-        #     return redirect(url_for('detail', book_id))
-            # return render_template('detail.html', book=book, user=user, rating_user= rating)
-
-        return render_template('detail.html', book=book, books = books_random)
+        return render_template('detail.html', book=book, books = books_CB)
     
     @app.route('/submit_rating', methods=['POST'])
     def submit_rating():

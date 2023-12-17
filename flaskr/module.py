@@ -4,6 +4,7 @@ import pandas as pd
 from werkzeug.exceptions import abort
 from flaskr import CFService
 from pathlib import Path
+from flaskr import contentbased as CB
 # from CFService import CFService
 
 pathKNN = Path('./data/knn_prediction.csv')
@@ -93,6 +94,13 @@ def list_ALSRecommendation(user_id, books):
 
     print(list_books)
     return list_books
+
+def list_CBRecommendation(book_name, books, ratings):
+    top_k = CB.recommended_k_films_by_movie_name(book_name)
+    for book in top_k:
+        book['ratingavg'] = getRatingavg(book['item_id'], ratings)
+    print(top_k)
+    return top_k
 
 
 def getBookbyId(book_id, books, ratings):
