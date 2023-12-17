@@ -215,3 +215,9 @@ def w2v_recommendation(userId, k, ratings=filtered_ratings):
     top_k_similar_books = find_top_k_similar_books_w2v(userId, k, ratings)
     if top_k_similar_books is not None:
         return top_k_similar_books.drop("cos_sim", axis=1).to_dict(orient="records")
+
+
+def w2v_recommendation_df(userId, k, ratings=filtered_ratings):
+    top_k_similar_books = find_top_k_similar_books_w2v(userId, k, ratings)
+    if top_k_similar_books is not None:
+        return top_k_similar_books

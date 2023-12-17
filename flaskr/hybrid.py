@@ -27,7 +27,7 @@ svd.fit(trainset)
 
 
 def hybrid_recommendation(userId, k):
-    top_k = CB.w2v_recommendation(userId, 3 * k)
+    top_k = CB.w2v_recommendation_df(userId, 3 * k)
     item_ids = top_k["item_id"].values
     ratings_predict = [svd.predict(userId, item_id).est for item_id in item_ids]
     top_k["est"] = ratings_predict
