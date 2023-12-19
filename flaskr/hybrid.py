@@ -4,15 +4,17 @@ import numpy as np
 from surprise import Reader, Dataset, SVD
 from flaskr import contentbased as CB
 
-
+print("hb")
 def joinPath(file_name):
     base_dir = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(base_dir, "data", file_name)
     return file_path
 
 
-books = pd.read_json(joinPath("metadata.json"), lines=True)
-ratings = pd.read_json(joinPath("ratings.json"), lines=True)
+# books = pd.read_json(joinPath("metadata.json"), lines=True)
+# ratings = pd.read_json(joinPath("ratings.json"), lines=True)
+books = pd.read_json("./data/rawdata/metadata.json", lines=True)
+ratings = pd.read_json("./data/rawdata/ratings.json", lines=True)
 
 reader = Reader()
 
@@ -26,8 +28,11 @@ trainset = data.build_full_trainset()
 svd.fit(trainset)
 
 
-def hybrid_recommendation(userId, k):
+def hybrid_recommendation(userId, k = 10):
     top_k = CB.w2v_recommendation_df(userId, 3 * k)
+    # print(top_k)
+    if top_k is None:
+        return []
     item_ids = top_k["item_id"].values
     ratings_predict = [svd.predict(userId, item_id).est for item_id in item_ids]
     top_k["est"] = ratings_predict

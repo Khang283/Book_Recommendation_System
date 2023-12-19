@@ -1,15 +1,17 @@
 import pandas as pd
 import os
 
-
+print("DF")
 def joinPath(file_name):
     base_dir = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(base_dir, "data", file_name)
     return file_path
 
 
-books = pd.read_json(joinPath("metadata.json"), lines=True)
-ratings = pd.read_json(joinPath("ratings.json"), lines=True)
+# books = pd.read_json(joinPath("metadata.json"), lines=True)
+# ratings = pd.read_json(joinPath("ratings.json"), lines=True)
+books = pd.read_json("./data/rawdata/metadata.json", lines=True)
+ratings = pd.read_json("./data/rawdata/ratings.json", lines=True)
 
 grouped_ratings = ratings.groupby("item_id")
 
@@ -42,14 +44,10 @@ def weighted_rating(x, m=m, C=C):
     return (v / (v + m) * R) + (m / (m + v) * C)
 
 
-def recommended(k):
+def recommended(k =10):
     q_movies = df.copy().loc[df["vote_count"] >= m]
     q_movies["score"] = q_movies.apply(weighted_rating, axis=1)
     q_movies = q_movies.sort_values("score", ascending=False)
-    result = (
-        q_movies.head(k)
-        .drop(["vote_average", "vote_count", "score"], axis=1)
-        .to_dict(orient="records")
-    )
+    result = q_movies.head(k).drop(["vote_average", "vote_count", "score"], axis=1).to_dict(orient="records")
 
     return result

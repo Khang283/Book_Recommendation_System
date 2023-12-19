@@ -41,7 +41,6 @@ class KnowledgeBased :
         result = pd.merge(self.books,result,on='item_id',how='inner')
         result = result.sort_values('average_rating',ascending=False)
         return result[:top]
-    
 
 
 path = Path(__file__).parent.parent/"data"

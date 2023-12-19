@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container text-center">
+    <div class="row">
+        <div class="col-sm-4">
+            <div class="row container">
+                <img src="{{book['img']}}" class="img-fluid max-width-50" alt="{{book['title']}}"
+                    style="width: 300px; height: 400px;">
+
+            </div>
+
+            {% if user %}
+            <div class="containe row">
+                <h2>Đánh giá</h2>
+                <form action="{{ url_for('submit_rating') }}" method="post">
+                    <div class="form-group">
+                        <label for="rating">Đánh giá:</label>
+                        <div id="rating" data-score="{{rating_user}}"></div>
+                        <input type="hidden" name="rating-input" id="rating-input">
+                        <input type="hidden" name="book_id" id="book_id" value="{{ book['item_id'] }}">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
+                </form>
+            </div>
+            {% endif %}
+
+        </div>
+
+        <div class="col-sm-8 text-start">
+            <h3>{{book['title']}}</h3>
+
+            <p>{{book['authors']}}</p>
+            <div id="ratingavg" style="display: inline-block;" data-score="{{ book['ratingavg'] }}"></div>
+            <div style="display: inline-block;"> <strong>{{ book['ratingavg'] }}</strong></div>
+
+            <p>{{book['description']}}</p>
+        </div>
+    </div>
+</div>
+<br/>
+
+<div>
+    <h2>
+        Sách Tương Tự
+    </h2>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-5 g-4" style="display: flex; flex-wrap: wrap; height: 100%;">
+        {% for book in books %}
+        <div class="col" >
+            <div class="card" style="height: 100%;">
+                <a href="{{ url_for('detail', book_id=book['item_id']) }}">
+                    <img src="{{book['img']}}" class="card-img-top" alt="{{book['title']}}" height="300px" width="200px">
+                </a>
+                <div class="card-body">
+                    <h5 class="card-title">{{book['title']}}</h5>
+                    <p class="card-text"> Tác giả: {{book['authors']}}</p>
+                    <div class="card-text ratingavg" id="ratingavg" data-score="{{book['ratingavg']}}"></div>
+                </div>
+            </div>
+
+        </div>
+
+        {% endfor %}
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"> -->
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/jquery.raty.js') }}"></script>
+
+<script>
+    // console.log({{ book['ratingavg'] }});
+    $(document).ready(function () {
+        $(function () {
+            $('#rating').raty({
+                path: "{{ url_for('static', filename='images') }}",
+                number: 5, // Số lượng ngôi sao
+                score: function () {
+                    return $(this).attr('data-score');
+                },
+                click: function(score, evt) {
+                    $('#rating-input').val(score);
+                    // alert(score);
+                }
+            });
+
+            $('#ratingavg').raty({
+                path: "{{ url_for('static', filename='images') }}",
+                readOnly: true,
+                number: 5, // Số lượng ngôi sao
+                score: function () {
+                    return $(this).attr('data-score');
+                },
+            });
+
+            $('.ratingavg').each(function (index, element) {
+                console.log(index + ": " + $(element).text());
+                $(element).raty({
+                    path: "{{ url_for('static', filename='images') }}",
+                    readOnly: true,
+                    number: 5,
+                    score: function () {
+                        return $(this).attr('data-score');
+                    }
+                })
+            })
+        });
+    });
+</script>
+{% endblock %}
