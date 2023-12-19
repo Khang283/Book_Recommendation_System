@@ -10,7 +10,14 @@ import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import nltk
+
+print("CB")
 nltk.download('punkt')
+# Kiểm tra xem mô-đun punkt đã được tải hay chưa
+# if not nltk.data.find('tokenizers/punkt'):
+#     nltk.download('punkt')
+# else:
+#     print("Mô-đun punkt đã được tải.")
 
 def joinPath(file_name):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -50,7 +57,7 @@ def read_file_to_list(file_path):
 
 
 # stopwords_list = read_file_to_list(joinPath("stopwords.txt"))
-stopwords_list = read_file_to_list("./model/stopwords.txt")
+stopwords_list = read_file_to_list("./data/W2v/stopwords.txt")
 
 def remove_punctuation(text):
     if isinstance(text, str):
@@ -142,7 +149,7 @@ def recommended_k_films_by_movie_name(movie_name):
     return recommended_films_list
 
 
-googlenews_model_path = "./model/GoogleNews-vectors-negative300.bin.gz"
+googlenews_model_path = "./data/W2v/GoogleNews-vectors-negative300.bin.gz"
 
 model = KeyedVectors.load_word2vec_format(googlenews_model_path, binary=True)
 
@@ -218,3 +225,9 @@ def w2v_recommendation(userId, k, ratings=filtered_ratings):
     top_k_similar_books = find_top_k_similar_books_w2v(userId, k, ratings)
     if top_k_similar_books is not None:
         return top_k_similar_books.drop("cos_sim", axis=1).to_dict(orient="records")
+
+
+def w2v_recommendation_df(userId, k, ratings=filtered_ratings):
+    top_k_similar_books = find_top_k_similar_books_w2v(userId, k, ratings)
+    if top_k_similar_books is not None:
+        return top_k_similar_books

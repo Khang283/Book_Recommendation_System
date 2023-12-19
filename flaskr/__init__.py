@@ -42,25 +42,31 @@ def create_app(test_config=None):
     @app.route('/')
     def home():
         user = session.get('user')
-        list_books = module.getList("./data/books.csv")
-        books_random =module.getListRandomBook(list_books)
-        books_ALS =module.list_ALSRecommendation(user["user_id"], list_books)
+        list_books = module.getList("./data/rawdata/metadata.json")
+        ratings =module.getList('./data/rawdata/ratings.json')
         
-        return render_template('home.html', books =books_random, books_ALS = books_ALS,  user=user)
+        books_random =module.getListRandomBook(list_books, ratings)
+        books_DF = module.list_DFRecommendation(ratings)
+        books_hybrid =[]
+        if 'user' in session:
+            books_hybrid =module.list_hybridRecommendation(user["user_id"], ratings)
+
+        return render_template('home.html', books =books_random, books_hybrid = books_hybrid, books_DF= books_DF, user=user)
     
     # page detail
     @app.route('/<int:book_id>', methods=['GET', 'POST'])
     def detail(book_id):
-        list_books = module.getList('./data/books.csv')
-        ratings =module.getList('./data/ratings.csv')
+        list_books = module.getList('./data/rawdata/metadata.json')
+        ratings =module.getList('./data/rawdata/ratings.json')
         # module.test()
         book = module.getBookbyId(book_id, list_books, ratings)
-        books_CB = module.list_CBRecommendation(book["title"], list_books, ratings)
-        books_random =module.getListRandomBook(list_books)
+        books_CB = module.list_CBRecommendation(book["title"], ratings)
+        # books_random =module.list_hybridRecommendation(user["user_id"])
 
         if 'user' in session:
             user = session.get('user')
             rating_user = module.getRatingBookByUser(book_id, user['user_id'], ratings)
+            
             return render_template('detail.html', book=book, user=user, rating_user= rating_user, books = books_CB)
 
         return render_template('detail.html', book=book, books = books_CB)
@@ -92,7 +98,7 @@ def create_app(test_config=None):
             password = request.form['password']
             hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
 
-            users = module.getList('./data/users.csv')
+            users = module.getList('./data/rawdata/users.json')
             user_id = module.get_max_user_id(users) +1
 
             if username not in users["username"].tolist():
@@ -121,7 +127,7 @@ def create_app(test_config=None):
         if request.method == 'POST':
             username = request.form['username']
             password = request.form['password']
-            users = module.getList('./data/users.csv')
+            users = module.getList('./data/rawdata/users.json')
             user = users[users["username"] == username]
             # user = [i for i in users if username == i['username']]
             if len(user) ==0:
@@ -147,13 +153,13 @@ def create_app(test_config=None):
         return redirect(url_for('login'))
 
 
-    @app.route("/test")
-    def contentbased_for_user():
-        userId = 28
-        contentbased_rs_list = CB.w2v_recommendation(userId, 10)
-        if contentbased_rs_list is not None:
-            return contentbased_rs_list
-        return []
+    # @app.route("/test")
+    # def contentbased_for_user():
+    #     userId = 28
+    #     contentbased_rs_list = CB.w2v_recommendation(userId, 10)
+    #     if contentbased_rs_list is not None:
+    #         return contentbased_rs_list
+    #     return []
 
     @app.route("/test2")
     def contentbased_on_book():
@@ -165,6 +171,13 @@ def create_app(test_config=None):
     def demographicfiltering():
         top_k = DF.recommended(10)
         return top_k
+    
+
+    @app.route("/test4")
+    def test_random():
+        list_books = module.getList("./data/rawdata/metadata.json")
+        books_random =module.getListRandomBook(list_books)
+        return books_random
 
     return app
 

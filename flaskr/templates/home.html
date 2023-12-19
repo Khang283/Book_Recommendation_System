@@ -3,7 +3,32 @@
 {% block content %}
 <!-- <h1>{% block title %} Hello, World! {% endblock %}</h1> -->
 
-<div>
+<br>
+    <h2>
+        Sách Thịnh Hành
+    </h2>
+
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-5 g-4" style="display: flex; flex-wrap: wrap; height: 100%;">
+        {% for book in books_DF %}
+        <div class="col" >
+            <div class="card" style="height: 100%;">
+                <a href="{{ url_for('detail', book_id=book['item_id']) }}">
+                    <img src="{{book['img']}}" class="card-img-top" alt="{{book['title']}}" height="300px" width="200px">
+                </a>
+                <div class="card-body">
+                    <h5 class="card-title">{{book['title']}}</h5>
+                    <p class="card-text"> Tác giả: {{book['authors']}}</p>
+                    <!-- <p class="card-text" id="rating_{{book['item_id']}}" data-score="{{book['ratingavg']}}"></p> -->
+                    <div class="card-text ratingavg" id="ratingavg" data-score="{{book['ratingavg']}}"></div>
+                </div>
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+    
+    <br></br>
+
     <h2>
         Sách dành cho bạn
     </h2>
@@ -28,12 +53,12 @@
 
     <br/>
 
-    {% if books_ALS !=[] %}
+    {% if books_hybrid !=[] %}
     <h2>
         Sách Khuyến Nghị
     </h2>
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-5 g-4" style="display: flex; flex-wrap: wrap; height: 100%;">
-        {% for book in books_ALS %}
+        {% for book in books_hybrid %}
         <div class="col" >
             <div class="card" style="height: 100%;">
                 <a href="{{ url_for('detail', book_id=book['item_id']) }}">
