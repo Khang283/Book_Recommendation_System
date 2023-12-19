@@ -3,9 +3,12 @@ import numpy as np
 from pathlib import Path
 
 class CFService:
-    def __init__(self) -> None:
-        pathKNN = Path('../data/knn_prediction.csv')
-        pathALS = Path('../data/als_prediction.csv')
+    def __init__(self, pathKNN, pathALS) -> None:
+        # pathKNN = Path('../data/knn_prediction.csv')
+        # pathKNN = "../data/knn_prediction.csv"
+        # pathALS = Path('../data/als_prediction.csv')
+        print(pathKNN)
+        
         self.knn = pd.read_csv(pathKNN,header=0,names=['user_id','item_id','rating','prediction','detail'])
         self.als = pd.read_csv(pathALS,names=['item_id','user_id','rating','prediction'])
         pass

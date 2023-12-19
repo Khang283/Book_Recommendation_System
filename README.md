@@ -8,10 +8,14 @@ Activate venv
 ```
     .venv/Scripts/activate
 ```
+
 Cài các requirements
 ``` 
     pip install -r requirements.txt
 ```
+
+Thêm các file cần thiết
+
 
 ## Chạy server
 ```
