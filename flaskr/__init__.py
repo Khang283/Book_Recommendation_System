@@ -9,6 +9,9 @@ from flask import Flask, render_template, request, redirect, url_for, session
 from flaskr import contentbased as CB
 from flaskr import demographicfiltering as DF
 
+books = module.getList("./data/rawdata/metadata.json")
+ratings =module.getList('./data/rawdata/ratings.json')
+users = module.getList('./data/rawdata/users.json')
 
 def create_app(test_config=None):
     # create and configure the app
@@ -37,29 +40,34 @@ def create_app(test_config=None):
     def index():
         return render_template('index.html')
     
+    
     # page home
     @app.route('/home')
     @app.route('/')
     def home():
         user = session.get('user')
-        list_books = module.getList("./data/rawdata/metadata.json")
-        ratings =module.getList('./data/rawdata/ratings.json')
+        global books
+        global ratings
+        # list_books = module.getList("./data/rawdata/metadata.json")
+        # ratings =module.getList('./data/rawdata/ratings.json')
         
-        books_random =module.getListRandomBook(list_books, ratings)
         books_DF = module.list_DFRecommendation(ratings)
         books_hybrid =[]
+        books_KL = []
         if 'user' in session:
+            books_KL =module.list_KLRecommendation(user["user_id"], books, ratings)
             books_hybrid =module.list_hybridRecommendation(user["user_id"], ratings)
 
-        return render_template('home.html', books =books_random, books_hybrid = books_hybrid, books_DF= books_DF, user=user)
+        return render_template('home.html', books_KL =books_KL, books_hybrid = books_hybrid, books_DF= books_DF, user=user)
     
     # page detail
     @app.route('/<int:book_id>', methods=['GET', 'POST'])
     def detail(book_id):
-        list_books = module.getList('./data/rawdata/metadata.json')
-        ratings =module.getList('./data/rawdata/ratings.json')
-        # module.test()
-        book = module.getBookbyId(book_id, list_books, ratings)
+        global books
+        global ratings
+        # list_books = module.getList('./data/rawdata/metadata.json')
+        # ratings =module.getList('./data/rawdata/ratings.json')
+        book = module.getBookbyId(book_id, books, ratings)
         books_CB = module.list_CBRecommendation(book["title"], ratings)
         # books_random =module.list_hybridRecommendation(user["user_id"])
 
@@ -74,6 +82,7 @@ def create_app(test_config=None):
     @app.route('/submit_rating', methods=['POST'])
     def submit_rating():
         if request.method == 'POST':
+            global ratings
             rating_input = request.form['rating-input']
             book_id = request.form['book_id']
             # ratings =module.getList('./data/ratings.csv')
@@ -83,7 +92,8 @@ def create_app(test_config=None):
                 "rating": int(rating_input)
             }
 
-            if module.add_Rating(rating):
+            if module.add_Rating(rating, ratings):
+                ratings =module.getList('./data/rawdata/ratings.json')
                 return redirect(url_for('detail', book_id = book_id))
             else:
                 error = 'Đánh giá không thành công'
@@ -98,7 +108,8 @@ def create_app(test_config=None):
             password = request.form['password']
             hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
 
-            users = module.getList('./data/rawdata/users.json')
+            # users = module.getList('./data/rawdata/users.json')
+            global users
             user_id = module.get_max_user_id(users) +1
 
             if username not in users["username"].tolist():
@@ -108,6 +119,7 @@ def create_app(test_config=None):
                     "password": hashed_password
                 }
                 if module.add_new_user(user, users):
+                    users = module.getList('./data/rawdata/users.json')
                     return redirect(url_for('login'))
                 else:
                     error = 'Không thể đăng kí, xin vui lòng đăng kí lại.'
@@ -123,11 +135,11 @@ def create_app(test_config=None):
     # page login
     @app.route('/login', methods=['GET', 'POST'])
     def login():
-        
         if request.method == 'POST':
             username = request.form['username']
             password = request.form['password']
-            users = module.getList('./data/rawdata/users.json')
+            # users = module.getList('./data/rawdata/users.json')
+            global users
             user = users[users["username"] == username]
             # user = [i for i in users if username == i['username']]
             if len(user) ==0:

@@ -5,7 +5,7 @@
 
 <br>
     <h2>
-        Sách Thịnh Hành
+        Đang Thịnh Hành
     </h2>
 
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-5 g-4" style="display: flex; flex-wrap: wrap; height: 100%;">
@@ -28,12 +28,12 @@
     </div>
     
     <br></br>
-
+    {% if books_KL !=[] %}
     <h2>
-        Sách dành cho bạn
+        Dành Cho Bạn
     </h2>
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-5 g-4" style="display: flex; flex-wrap: wrap; height: 100%;">
-        {% for book in books %}
+        {% for book in books_KL %}
         <div class="col" >
             <div class="card" style="height: 100%;">
                 <a href="{{ url_for('detail', book_id=book['item_id']) }}">
@@ -43,19 +43,19 @@
                     <h5 class="card-title">{{book['title']}}</h5>
                     <p class="card-text"> Tác giả: {{book['authors']}}</p>
                     <!-- <p class="card-text" id="rating_{{book['item_id']}}" data-score="{{book['ratingavg']}}"></p> -->
-                    <div class="card-text ratingavg" id="ratingavg" data-score="{{book['ratingavg']}}"></div>
+                    <div class="card-text ratingavg" id="ratingavg" data-score="{{book['average_rating']}}"></div>
                 </div>
             </div>
 
         </div>
         {% endfor %}
     </div>
-
+    {% endif %}
     <br/>
 
     {% if books_hybrid !=[] %}
     <h2>
-        Sách Khuyến Nghị
+        Có Thể Bạn Sẻ Thích
     </h2>
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-5 g-4" style="display: flex; flex-wrap: wrap; height: 100%;">
         {% for book in books_hybrid %}
