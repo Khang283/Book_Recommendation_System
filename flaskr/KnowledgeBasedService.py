@@ -3,11 +3,12 @@ import numpy as np
 from pathlib import Path
 
 class KnowledgeBasedService :
-    def __init__(self,path):
-        self.books = pd.read_csv(path+"/books.csv", encoding="utf-8",usecols=range(1,10))
-        self.tags = pd.read_json(path+'/tags.json',lines=True)
-        self.tag_count = pd.read_json(path+'/tag_count.json',lines=True)
-        self.ratings = pd.read_json(path+'/ratings.json',lines=True)
+    def __init__(self):
+        self.books = pd.read_csv("data/books.csv", encoding="utf-8",usecols=range(1,10))
+        # self.books = pd.read_json('data/rawdata/metadata.json',lines=True)
+        self.tags = pd.read_json('data/rawdata/tags.json',lines=True)
+        self.tag_count = pd.read_json('data/rawdata/tag_count.json',lines=True)
+        self.ratings = pd.read_json('data/rawdata/ratings.json',lines=True)
 
         ### Prepare data
         self.df = pd.merge(self.books, self.tag_count, on='item_id',how='inner')

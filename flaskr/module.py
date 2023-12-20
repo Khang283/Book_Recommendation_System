@@ -3,6 +3,7 @@ import random
 import pandas as pd
 from werkzeug.exceptions import abort
 from flaskr import CFService
+from flaskr import KnowledgeBasedService
 from pathlib import Path
 from flaskr import contentbased as CB
 from flaskr import demographicfiltering as DF
@@ -12,6 +13,7 @@ print("module")
 pathKNN = Path('./data/knn_prediction.csv')
 pathALS = Path('./data/als_prediction.csv')
 service = CFService.CFService(pathKNN, pathALS)
+KLservice = KnowledgeBasedService.KnowledgeBasedService()
 
 def getList(url):
     # data=[]
@@ -36,8 +38,8 @@ def getRatingBookByUser(book_id, user_id, ratings):
         return 0
     return rating['rating'].tolist()[0]
 
-def add_Rating(rating):
-    ratings = getList('./data/rawdata/ratings.json')
+def add_Rating(rating, ratings):
+    # ratings = getList('./data/rawdata/ratings.json')
 
     print(rating['rating'])
     check_rating = ratings[(ratings["item_id"] == rating["item_id"]) & (ratings["user_id"] == rating["user_id"])]
@@ -89,6 +91,24 @@ def list_ALSRecommendation(user_id, books):
 
     # print(list_books)
     return list_books
+
+def list_KLRecommendation(user_id, books,ratings):
+    # ratings =getList('./data/rawdata/ratings.json')
+    list_books = KLservice.getRecommendBooks(user_id)
+    # print(list_books)
+    # list_books_json = []
+    listBooks_json = list_books.to_dict(orient='records')
+    # for i in range(len(list_books)):
+    #     # print(book["item_id"])
+    #     # book = books[books["item_id"] == i[""]]
+    #     book_json = list_books[i].to_dict(orient='records')
+    #     list_books_json.append(book_json[0])
+
+    # for book in list_books:
+    #      book['ratingavg'] = getRatingavg(book['item_id'], ratings)
+
+    # print(list_books)
+    return listBooks_json
 
 def list_CBRecommendation(book_name, ratings):
     top_k = CB.recommended_k_films_by_movie_name(book_name)
